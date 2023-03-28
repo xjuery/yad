@@ -5,7 +5,7 @@ import os
 import tarfile
 import json
 import datetime
-
+import hashlib
 
 def getImageLocally(imageName):
     tmpDirectory = os.path.dirname(__file__)
@@ -54,6 +54,23 @@ def parseDockerImage(imageName):
                     "uname": contentMember.uname,
                     "gname": contentMember.gname
                 }
+
+                if contentMember.isfile():
+                    contentMemberContent = layerContent.extractfile(contentMember.name)
+                    c["md5sum"] = hashlib.md5(contentMemberContent.read()).hexdigest()
+                    c["type"] = "file"
+                elif contentMember.isdir():
+                    c["type"] = "directory"
+                elif contentMember.issym():
+                    c["type"] = "symboliclink"
+                elif contentMember.islnk():
+                    c["type"] = "hardlink"
+                elif contentMember.ischr():
+                    c["type"] = "characterdevice"
+                elif contentMember.isblk():
+                    c["type"] = "blockdevice"
+                elif contentMember.isfifo():
+                    c["type"] = "fifo"
                 content.append(c)
 
             layer["content"] = content
